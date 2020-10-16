@@ -19,7 +19,12 @@ conda activate opensesame-py3
 conda config --add channels cogsci --add channels conda-forge
 conda install python-opensesame opensesame-extension-osweb opensesame-plugin-psychopy psychopy rapunzel python-pygaze
 
-pip3 install soundfile pygame yolk3k opensesame-extension-osf python-qtpip http://files.cogsci.nl/expyriment-0.10.0+opensesame2-py3-none-any.whl
-
+pip3 install soundfile pygame yolk3k opensesame-extension-osf python-qtpip 
 
 ## Run
+start OpenSesame by running:
+opensesame
+
+In the UI of opensesame open the experiment file "MeltingActiveRetrievalAlpha.osexp" that you have downloaded from this repository.
+In the initial prompts please indicate the participant number that we allocated to you 
+and also indicate the location to which the log file can be saved. Please send us this log file after the experiment.
