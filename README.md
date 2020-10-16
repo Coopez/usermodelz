@@ -12,20 +12,21 @@ Requirements:
 With anaconda (cross-platform) run:
 
 ### create an environment
-conda create -n opensesame-py3 python=3.7
+`conda create -n opensesame-py3 python=3.7`
 
-conda activate opensesame-py3
+`conda activate opensesame-py3`
 
 ### set path and install packages
-conda config --add channels cogsci --add channels conda-forge
+`conda config --add channels cogsci --add channels conda-forge`
 
-conda install python-opensesame opensesame-extension-osweb opensesame-plugin-psychopy psychopy rapunzel python-pygaze
+`conda install python-opensesame opensesame-extension-osweb opensesame-plugin-psychopy psychopy rapunzel python-pygaze`
 
-pip3 install soundfile pygame yolk3k opensesame-extension-osf python-qtpip http://files.cogsci.nl/expyriment-0.10.0+opensesame2-py3-none-any.whl
+`pip3 install soundfile pygame yolk3k opensesame-extension-osf python-qtpip http://files.cogsci.nl/expyriment-0.10.0+opensesame2-py3-none-any.whl`
 
 ## Run
 start OpenSesame by running:
-opensesame
+
+`opensesame`
 
 In the UI of opensesame open the experiment file "MeltingActiveRetrievalAlpha.osexp" that you have downloaded from this repository.
 In the initial prompts please indicate the participant number that we allocated to you 
