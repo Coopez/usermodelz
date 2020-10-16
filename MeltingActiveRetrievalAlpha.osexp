@@ -1,0 +1,2328 @@
+---
+API: 2.1
+OpenSesame: 3.3.3
+Platform: posix
+---
+set width 1024
+set uniform_coordinates yes
+set title "Melting Active Retrieval"
+set subject_parity even
+set subject_nr 0
+set start experiment
+set sound_sample_size -16
+set sound_freq 48000
+set sound_channels 2
+set sound_buf_size 1024
+set sampler_backend psycho
+set round_decimals 2
+set mouse_backend psycho
+set keyboard_backend psycho
+set height 768
+set fullscreen no
+set form_clicks no
+set foreground white
+set font_underline no
+set font_size 20
+set font_italic no
+set font_family mono
+set font_bold no
+set experiment_path "/Users/annikaschnabel/Documents/UserModels"
+set disable_garbage_collection yes
+set description "The main experiment item"
+set coordinates uniform
+set compensation 0
+set color_backend psycho
+set clock_backend psycho
+set canvas_backend psycho
+set background black
+
+define sketchpad Break
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Congratulation! You finished the first part of the experiment. Once you are ready spress enter to start the second part of the experiment" x=0 y=0 z_index=0
+
+define sketchpad Debriefing
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Thank you for participating in our experiment. Please send the output file to us." x=0 y=0 z_index=0
+
+define inline_script MixedDesign
+	set description "Führt Python Code aus"
+	___run__
+	
+	for index in range (4):
+	    if (var.subject_nr - index) % 4 == 0:
+	        var.condition = index
+	        print(index)
+	        break
+	
+	if index % 2 == 0:
+	    var.counterBalancing = 'experiment'
+	else:
+	    var.counterBalancing = 'control'
+	
+	if index == 0 or index == 3:
+	    var.experiment = 'hint'
+	else:
+	    var.experiment = 'button'
+	__end__
+	set _prepare ""
+
+define inline_script User_h
+	set description "Führt Python Code aus"
+	___run__
+	my_canvas = Canvas()
+	my_canvas['Instruction'] = Text("Please enter a user name (no upper case letters):", y = -20, font_size = 25, color = "white")
+	my_canvas.prepare()
+	my_canvas.show()
+	# Listen for keyboard input and show keypresses on screen as they occur
+	my_keyboard = Keyboard()
+	my_keyboard.timeout = 3000
+	keyboard_response = ""
+	erased_answer = False
+	
+	# Keep listening for key presses until the user presses Enter
+	while True:
+	    key, time = my_keyboard.get_key()
+	
+	    if key == "return":
+	        break
+	
+	    if key == "backspace":
+	        keyboard_response = keyboard_response[:-1]
+	        # If the answer is completely erased, the RT is no longer informative
+	        if keyboard_response == "":
+	            erased_answer = True
+	            
+	    elif key == "space":
+	        keyboard_response += " "
+	
+	    elif not key == None:
+	
+	        keyboard_response += my_keyboard.to_chr(key)
+	
+	    # Update what's on screen'
+	    my_canvas.clear()
+	    my_canvas['Instruction'] = Text("Please enter a user name (no upper case letters):", y = -20, font_size = 25, color = "white")
+	    my_canvas.text(keyboard_response, y = 30)
+	    my_canvas.prepare()
+	    my_canvas.show()
+	#print(F'user name: {keyboard_response}')
+	exp.set('user', keyboard_response)
+	#useranswer = self.get('user')
+	#print(F'username: {useranswer}')
+	__end__
+	set _prepare ""
+
+define sequence condition_button
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run slimstampen_setup_b always
+	run instructions_b always
+	run scoring_b always
+	run learning_session_setup_b always
+	run while_there_is_time_left_b always
+	run feedback_board_b always
+	run save_data_b always
+
+define sequence condition_hint
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run slimstampen_setup_h always
+	run instructions_h always
+	run scoring_h always
+	run User_h always
+	run learning_session_setup_h always
+	run while_there_is_time_left_h always
+	run feedback_text_h always
+	run feedback_board_h always
+	run save_data_h always
+
+define sequence control
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run slimstampen_setup_c always
+	run instructions_c always
+	run learning_session_setup_c always
+	run while_there_is_time_left_c always
+	run save_data_c always
+
+define sequence experiment
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run MixedDesign always
+	run hello always
+	run experiment_loop_odd "[counterBalancing] = experiment"
+	run experiment_loop_even "[counterBalancing] = control"
+	run Debriefing always
+
+define sequence experiment_loop_even
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run condition_hint "[experiment] = hint"
+	run test_h "[experiment] = hint"
+	run condition_button "[experiment] = button"
+	run test_b "[experiment] = button"
+	run Break always
+	run control always
+	run test_c always
+
+define sequence experiment_loop_odd
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run control always
+	run test_c always
+	run Break always
+	run condition_button "[experiment] = 'button'"
+	run test_b "[experiment] = 'button'"
+	run condition_hint "[experiment] = 'hint'"
+	run test_h "[experiment] = 'hint'"
+
+define feedback feedback_board_b
+	set reset_variables yes
+	set duration keypress
+	set description "Gibt Versuchspersonen Feedback"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Thank you for your effort! Press enter to continue" x=0 y=0 z_index=0
+
+define feedback feedback_board_h
+	set reset_variables yes
+	set duration keypress
+	set description "Gibt Versuchspersonen Feedback"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="[feedback_msg] You have a score of [total_correct] from [total_responses] possible points. That corresponds to an accuracy of [accuracy]%." x=0 y=0 z_index=0
+
+define inline_script feedback_text_h
+	set description "Führt Python Code aus"
+	___run__
+	acc = 100.*self.get('total_correct')/self.get('total_responses')
+	
+	exp.set('accuracy', acc)
+	exp.set('acc', acc)
+	
+	if self.get('acc') > 90:
+		exp.set('feedback_msg', 'Excellent, well done!')
+	elif self.get('acc') > 75:
+		exp.set('feedback_msg', 'Pretty good!')
+	else:
+		exp.set('feedback_msg', 'Come on, you can do better!')
+		
+	data = {'User':[self.get('user')],'Score':[self.get('total_correct')], 'Possible Score':[self.get('total_responses')], 
+		'Accuracy':[self.get('accuracy')]}
+	# Create DataFrame 
+	df = pd.DataFrame(data)
+	#df.to_csv("your_name.csv", encoding = 'utf-8') 										
+																															
+	def export_output(dat, path = None):
+	        # type: (str) -> DataFrame
+	        
+	        if path is not None:
+	            dat.to_csv(path, encoding="UTF-8")
+	            return(dat)
+	        
+	        return(dat.to_csv())
+	ex = export_output(df)																																																																		
+	log.write(ex)
+	__end__
+	set _prepare ""
+
+define sketchpad hello
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Welcome to the experiment. In the following you will have 2 learning sessions. The experiment should take around 45 minutes." x=0 y=0 z_index=0
+
+define sketchpad instructions_b
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Hello, Welcome to Melting Active Retrieval. For each English word enter the translation. After each new item,you can indicate whether you found this easy or difficult by pressing the respective button." x=-32.0 y=0.0 z_index=0
+
+define sketchpad instructions_c
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Please type the corresponding translation to the english word." x=0 y=0 z_index=0
+
+define sketchpad instructions_h
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Hello, Welcome to Melting Active Retrieval. For each english word enter the translation. If you do not know the answer hints will be given to you after 3 seconds. If you do not know the answer just give a random letter and press enter. <br><br> Press enter to continue." x=0 y=96 z_index=0
+
+define inline_script learning_session_setup_b
+	set description "Executes Python code"
+	___run__
+	# Start the clock
+	var.session_start_time = clock.time()
+	
+	# Session will run until time_up == True
+	var.time_up = False
+	
+	# Keep track of trial number
+	var.trial_num = 1
+	
+	# Settings
+	var.session_duration = 60000
+	var.feedback_duration = 800
+	var.inter_trial_interval = 200
+	
+	exp.set('total_responses', 0)
+	exp.set('total_correct', 0)
+	exp.set('accuracy', 'NA')
+	exp.set('acc', 'NA')
+	__end__
+	set _prepare ""
+
+define inline_script learning_session_setup_c
+	set description "Executes Python code"
+	___run__
+	# Start the clock
+	var.session_start_time = clock.time()
+	
+	# Session will run until time_up == True
+	var.time_up = False
+	
+	# Keep track of trial number
+	var.trial_num = 1
+	
+	# Settings
+	var.session_duration = 1000
+	var.feedback_duration = 800
+	var.inter_trial_interval = 200
+	__end__
+	set _prepare ""
+
+define inline_script learning_session_setup_h
+	set description "Executes Python code"
+	___run__
+	# Start the clock
+	var.session_start_time = clock.time()
+	
+	# Session will run until time_up == True
+	var.time_up = False
+	
+	# Keep track of trial number
+	var.trial_num = 1
+	
+	# Settings
+	var.session_duration = 60000
+	var.feedback_duration = 800
+	var.inter_trial_interval = 200
+	
+	exp.set('total_responses', 0)
+	exp.set('total_correct', 0)
+	exp.set('accuracy', 'NA')
+	exp.set('acc', 'NA')
+	__end__
+	set _prepare ""
+
+define feedback new_feedback_b
+	set reset_variables yes
+	set duration keypress
+	set description "Gibt Versuchspersonen Feedback"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Congratulation. You finished the testing phase." x=0 y=0 z_index=0
+
+define feedback new_feedback_h
+	set reset_variables yes
+	set duration keypress
+	set description "Gibt Versuchspersonen Feedback"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="[feedback_test] You have [correct_test] from [responses_test] possible answers correct. That corresponds to an accuracy of [accuracy_test]%." x=0 y=0 z_index=0
+
+define inline_script present_trial_b
+	set description "Executes Python code"
+	___run__
+	trial_start_time = clock.time()
+	
+	# Get next fact from the model
+	next_fact, new = m.get_next_fact(current_time = trial_start_time)
+	prompt = next_fact.question
+	answer = next_fact.answer
+	
+	# Show prompt
+	my_canvas = Canvas()
+	my_canvas.text(prompt, font_size = 30)
+	if new:
+		my_canvas.text(answer, y = 50, font_size = 20)
+	my_canvas.prepare()
+	my_canvas.show()
+	
+	# Listen for keyboard input and show keypresses on screen as they occur
+	my_keyboard = Keyboard()
+	keyboard_response = ""
+	erased_answer = False
+	rt = float("inf")
+	
+	
+	#define mouse
+	my_mouse = Mouse()
+	
+	#buttons x1, x2, y1, y2 
+	loc_names = [(-330,-150,200,290),(150,330,200,290)]
+	
+	# Keep listening for key presses until the user presses Enter
+	last_prompt = 0
+	
+	# Keep listening for key presses until the user presses Enter
+	while True:
+		key, time = my_keyboard.get_key()
+		
+		# The first keypress determines the response time
+		if keyboard_response == "" and not erased_answer:
+			rt = clock.time() - trial_start_time
+		
+		if key == "return":
+			if new:
+				last_prompt=1
+			break
+			
+		if key == "backspace":
+			keyboard_response = keyboard_response[:-1]
+			# If the answer is completely erased, the RT is no longer informative
+			if keyboard_response == "":
+				erased_answer = True
+				rt = float("inf")
+		
+		elif key == "space":
+			keyboard_response += " "
+		
+		else:
+			keyboard_response += my_keyboard.to_chr(key)
+	
+		# Update what's on screen'
+		my_canvas.clear()
+		my_canvas.text(prompt, font_size = 30)
+		if new:
+			my_canvas.text(answer, y = 50, font_size = 20)
+			last_prompt = 1
+		my_canvas.text(keyboard_response, y = 100)
+		my_canvas.prepare()
+		my_canvas.show()
+	
+	
+	## Buttons
+	
+	if last_prompt:
+	    my_canvas.rect(150, 200, 180, 90, fill=True,color='red')
+	    my_canvas.rect(-330, 200, 180, 90, fill=True,color='green')
+	    my_canvas.text('Easy', x = -240, y = 245, font_size = 40)
+	    my_canvas.text('Hard', x = 240 , y = 245, font_size = 40) 
+	    my_canvas.prepare()
+	    my_canvas.show()
+	    my_mouse.flush()
+	    my_mouse.show_cursor(show=True)
+	
+	    button, mouse_loc, mouse_time = my_mouse.get_click(buttonlist=[1], timeout=(5000),visible=True)
+	    alpha = 0.3
+	    if button != None:
+	        mouse_x = mouse_loc[0]
+	        mouse_y = mouse_loc[1]
+	        cnt = 0
+	        for x1, x2, y1, y2 in loc_names:
+	            cnt += 1
+	            if mouse_x > x1 and mouse_x < x2 and mouse_y > y1 and mouse_y < y2:
+	                if cnt == 1: #participant pressed on easy
+	                    alpha = 0.2
+	                elif cnt == 2:#participant pressed on hard
+	                    alpha = 0.4
+	
+	            # draw boxes  
+	    last_prompt = 0
+	
+	
+	# Check if the response is correct
+	correct = keyboard_response == answer
+	
+	# Log response
+	response = Response(next_fact, trial_start_time, rt, correct, alpha)
+	m.register_response(response) 
+	
+	# Show feedback
+	feedback_color = "green" if correct else "red"
+	my_canvas.text(keyboard_response, y = 100, color = feedback_color)
+	if not correct:
+		my_canvas.text(answer, y = 150)
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.feedback_duration)
+	
+	# Clear the screen between trials
+	my_canvas.clear()
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.inter_trial_interval)
+	
+	# Check if time is up
+	if clock.time() - var.session_start_time >= var.session_duration:
+		var.time_up = True
+		
+	# Increment trial number
+	var.trial_num += 1
+	__end__
+	set _prepare ""
+
+define inline_script present_trial_c
+	set description "Executes Python code"
+	___run__
+	trial_start_time = clock.time()
+	
+	# Get next fact from the model
+	next_fact, new = m.get_next_fact(current_time = trial_start_time)
+	prompt = next_fact.question
+	answer = next_fact.answer
+	
+	# Show prompt
+	my_canvas = Canvas()
+	my_canvas.text(prompt, font_size = 30)
+	if new:
+		my_canvas.text(answer, y = 50, font_size = 20)
+	my_canvas.prepare()
+	my_canvas.show()
+	
+	# Listen for keyboard input and show keypresses on screen as they occur
+	my_keyboard = Keyboard()
+	keyboard_response = ""
+	erased_answer = False
+	rt = float("inf")
+	
+	# Keep listening for key presses until the user presses Enter
+	while True:
+		key, time = my_keyboard.get_key()
+		
+		# The first keypress determines the response time
+		if keyboard_response == "" and not erased_answer:
+			rt = clock.time() - trial_start_time
+		
+		if key == "return":
+			break
+			
+		if key == "backspace":
+			keyboard_response = keyboard_response[:-1]
+			# If the answer is completely erased, the RT is no longer informative
+			if keyboard_response == "":
+				erased_answer = True
+				rt = float("inf")
+		
+		elif key == "space":
+			keyboard_response += " "
+		
+		else:
+			keyboard_response += my_keyboard.to_chr(key)
+	
+		# Update what's on screen'
+		my_canvas.clear()
+		my_canvas.text(prompt, font_size = 30)
+		if new:
+			my_canvas.text(answer, y = 50, font_size = 20)
+		my_canvas.text(keyboard_response, y = 100)
+		my_canvas.prepare()
+		my_canvas.show()
+	
+	
+	# Check if the response is correct
+	correct = keyboard_response == answer
+	
+	# Log response
+	response = Response(next_fact, trial_start_time, rt, correct,0)
+	m.register_response(response) 
+	
+	# Show feedback
+	feedback_color = "green" if correct else "red"
+	my_canvas.text(keyboard_response, y = 100, color = feedback_color)
+	if not correct:
+		my_canvas.text(answer, y = 150)
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.feedback_duration)
+	
+	# Clear the screen between trials
+	my_canvas.clear()
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.inter_trial_interval)
+	
+	# Check if time is up
+	if clock.time() - var.session_start_time >= var.session_duration:
+		var.time_up = True
+		
+	# Increment trial number
+	var.trial_num += 1
+	__end__
+	set _prepare ""
+
+define inline_script present_trial_h
+	set description "Executes Python code"
+	___run__
+	trial_start_time = clock.time()
+	
+	# Get next fact from the model
+	
+	next_fact, new = m.get_next_fact(current_time = trial_start_time)
+	prompt = next_fact.question
+	answer = next_fact.answer
+	# Show prompt
+	my_canvas = Canvas()
+	exp.set('score', 100)
+	my_canvas['name_score'] = Text("Score",x = -160, y = -70, font_size = 30, color = "yellow")
+	if not new:
+	    my_canvas['start_score'] = Text(exp.get('score'),x = -160, y = -30, font_size = 20, color = "yellow")
+	else:
+	    my_canvas['start_score'] = Text(" ",x = -160, y = -30, font_size = 20, color = "yellow")
+	my_canvas['name_correct'] = Text("Total", x = 160, y = -70, font_size = 30, color = "purple")
+	my_canvas['start_correct'] = Text(self.get("total_correct"), x = 160, y = -30, font_size = 20, color = "purple")
+	my_canvas.text(prompt, font_size = 30)
+	if new:
+	    my_canvas.text(answer, y = 50, font_size = 20)
+	my_canvas.prepare()
+	my_canvas.show()
+	
+	# Listen for keyboard input and show keypresses on screen as they occur
+	my_keyboard = Keyboard()
+	my_keyboard.timeout = 3000
+	keyboard_response = ""
+	erased_answer = False
+	rt = float("inf")
+	cnt = 0
+	hint = 0
+	
+	# Keep listening for key presses until the user presses Enter
+	while True:  
+	    key, time = my_keyboard.get_key()
+	
+	    # Give hints if time limit is over
+	    if keyboard_response == "" and not new:
+	        hint = 1
+	        if cnt-1 < len(answer)/2:
+	            cnt += 1
+	            exp.set('score', self.get('score')-10)
+	
+	    else:
+	        hint = 0
+	
+	    # The first keypress determines the response time
+	    if keyboard_response == "" and not erased_answer:
+	        rt = clock.time() - trial_start_time
+	        
+	
+	    if key == "backspace":
+	        keyboard_response = keyboard_response[:-1]
+	        # If the answer is completely erased, the RT is no longer informative
+	        if keyboard_response == "":
+	            erased_answer = True
+	            rt = float("inf")
+	            hint = 1 #to make sure, the hint is immediately returned to the screen after one deleted whatever was typed
+	
+	
+	    elif key == "space":
+	        keyboard_response += " "
+	
+	    elif not key == None and key != "return":
+	        keyboard_response += my_keyboard.to_chr(key)
+	        hint = 0 #to make sure no extra letter is added after typing a letter and before the hint is removed from the screen
+	
+	    # Update what's on screen'
+	    my_canvas.clear()
+	    my_canvas.text(prompt, font_size = 30)
+	    my_canvas['name_score'] = Text("Score",x = -160, y = -70, font_size = 30, color = "yellow")
+	    if not new:
+	        my_canvas['my_score'] = Text(exp.get('score'),x = -160, y = -30, font_size = 20, color = "yellow")
+	    else:
+	        my_canvas['my_score'] = Text(" ",x = -160, y = -30, font_size = 20, color = "yellow")
+	        my_canvas.text(answer, y = 50, font_size = 20)
+	
+	    my_canvas['name_correct'] = Text("Total", x = 160, y = -70, font_size = 30, color = "purple")
+	    my_canvas['my_correct'] = Text(self.get("total_correct"), x = 160, y = -30, font_size = 20, color = "purple")
+	
+	    if key == "return": # this used to be in line 73, but an immediate enter would result in key error my_correct
+	        break
+	
+	    my_canvas.text(keyboard_response, y = 100)
+	    if hint and not new:
+	        clue = ""
+	        for letter in answer[: cnt-1]:
+	            clue += letter + " "
+	        clue += "_ " * (len(answer)-(cnt-1))
+	        my_canvas.text(clue, y=-120, font_size = 30)
+	    my_canvas.prepare()
+	    my_canvas.show()
+	### End of listening to input
+	
+	
+	# Check if the response is correct
+	correct = keyboard_response == answer
+	
+	# Log response
+	response = Response(next_fact, trial_start_time, rt, correct,0)
+	m.register_response(response)
+	
+	# Set score
+	if not new:
+	    if not correct:
+	        exp.set('score', 0)
+	    exp.set('total_responses', self.get('total_responses')+100)
+	    exp.set('total_correct', self.get('total_correct')+self.get('score'))
+	else:
+		exp.set('score', " ")
+	
+	# Show feedback
+	feedback_color = "green" if correct else "red"
+	my_canvas.text(keyboard_response, y = 100, color = feedback_color)
+	if not new:
+	    my_canvas['my_score'].color = 'black'
+	if correct:
+	    my_canvas.text(self.get('score'),x = -160, y = -30, font_size = 20, color = "blue")
+	else:
+	    my_canvas.text(self.get('score'),x = -160, y = -30, font_size = 20, color = "red")
+	    my_canvas.text(answer, y = 150)
+	my_canvas['my_correct'].color = 'black'
+	my_canvas.text(self.get("total_correct"),x = 160, y = -30, font_size = 20, color = "purple")
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.feedback_duration)
+	
+	# Clear the screen between trials
+	my_canvas.clear()
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.inter_trial_interval)
+	
+	# Check if time is up
+	if clock.time() - var.session_start_time >= var.session_duration:
+	    var.time_up = True
+	
+	# Increment trial number
+	var.trial_num += 1
+	__end__
+	set _prepare ""
+
+define inline_script save_data_b
+	set description "Executes Python code"
+	___run__
+	# Write the SlimStampen data to the OpenSesame log file
+	dat = m.export_data()
+	log.write(dat)
+	__end__
+	set _prepare ""
+
+define inline_script save_data_c
+	set description "Executes Python code"
+	___run__
+	# Write the SlimStampen data to the OpenSesame log file
+	dat = m.export_data()
+	log.write(dat)
+	__end__
+	set _prepare ""
+
+define inline_script save_data_h
+	set description "Executes Python code"
+	___run__
+	# Write the SlimStampen data to the OpenSesame log file
+	dat = m.export_data()
+	log.write(dat)
+	__end__
+	set _prepare ""
+
+define sketchpad scoring_b
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="When you indicate that an item is easy or difficult you will then encounter it less or more often afterwards. You will only be asked to rate the item the first time you encounter it. If you think that the item is neither particularly easy nor particularly difficult you can continue by clicking anywhere but on the buttons.<br /><br />Press enter to start the learning session" x=0.0 y=0.0 z_index=0
+
+define sketchpad scoring_h
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw rect color=orange fill=orange h=192 penwidth=5 show_if=always w=448 x=-224 y=-224 z_index=1
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="<span style='font-size:32px;'>Scoring</span> <br><br />correct answer = 100 points<br />each hint = -10 points<br />wrong answer = 0 point<br />new word (translation given) = 0 points<br /><br> <br><br />After the learning session your score will be displayed and after the experiment a ranking of the highscores from all participants will be send to you.<br /><br />Press enter to start the learning session" x=0 y=-64 z_index=0
+
+define inline_script slimstampen_setup_b
+	set description "Executes Python code"
+	___run__
+	m = SpacingModel()
+	
+	# Add some study facts to the model (you could also read them from a CSV file)
+	facts = [Fact(1, "art", "arto"),
+			Fact(2, "book", "libro"),
+			Fact(3, "country", "lando"),
+			Fact(4, "dictionary", "vortaro"),
+			Fact(5, "flowers", "floroj"),
+			Fact(6, "forest", "arbaro"),
+			Fact(7, "geography", "geografio"),
+			Fact(8, "house", "domo"),
+			Fact(9, "lake", "lago"),
+			Fact(10, "math", "matematiko"),
+			Fact(11, "mountain", "monto"),
+			Fact(12, "music", "muziko")]
+	
+	for fact in facts:
+		m.add_fact(fact)
+	__end__
+	___prepare__
+	from __future__ import division
+	import math
+	import pandas as pd
+	from collections import namedtuple
+	
+	Fact = namedtuple("Fact", "fact_id, question, answer")
+	Response = namedtuple("Response", "fact, start_time, rt, correct, alpha")
+	Encounter = namedtuple("Encounter", "activation, time, reaction_time, decay")
+	
+	
+	class SpacingModel(object):
+	
+	    # Model constants
+	    LOOKAHEAD_TIME = 15000
+	    FORGET_THRESHOLD = -0.8
+	    DEFAULT_ALPHA = 0.3
+	    C = 0.25
+	    F = 1.0
+	
+	    def __init__(self):
+	        self.facts = []
+	        self.responses = []
+	
+	    def add_fact(self, fact):
+	        # type: (Fact) -> None
+	        """
+	        Add a fact to the list of study items.
+	        """
+	        # Ensure that a fact with this ID does not exist already
+	        if next((f for f in self.facts if f.fact_id == fact.fact_id), None):
+	            raise RuntimeError(
+	                "Error while adding fact: There is already a fact with the same ID: {}. Each fact must have a unique ID".format(fact.fact_id))
+	
+	        self.facts.append(fact)
+	
+	
+	    def register_response(self, response):
+	        # type: (Response) -> None
+	        """
+	        Register a response.
+	        """
+	        # Prevent duplicate responses
+	        if next((r for r in self.responses if r.start_time == response.start_time), None):
+	            raise RuntimeError(
+	                "Error while registering response: A response has already been logged at this start_time: {}. Each response must occur at a unique start_time.".format(response.start_time))
+	
+	        self.responses.append(response)
+	
+	
+	    def get_next_fact(self, current_time):
+	        # type: (int) -> (Fact, bool)
+	        """
+	        Returns a tuple containing the fact that needs to be repeated most urgently and a boolean indicating whether this fact is new (True) or has been presented before (False).
+	        If none of the previously studied facts needs to be repeated right now, return a new fact instead.
+	        """
+	        # Calculate all fact activations in the near future
+	        fact_activations = [(f, self.calculate_activation(current_time + self.LOOKAHEAD_TIME, f)) for f in self.facts]
+	
+	        seen_facts = [(f, a) for (f, a) in fact_activations if a > -float("inf")]
+	        not_seen_facts = [(f, a) for (f, a) in fact_activations if a == -float("inf")]
+	
+	        # Prevent an immediate repetition of the same fact
+	        if len(seen_facts) > 2:
+	            last_response = self.responses[-1]
+	            seen_facts = [(f, a) for (f, a) in seen_facts if f.fact_id != last_response.fact.fact_id]
+	
+	        # Reinforce the weakest fact with an activation below the threshold
+	        seen_facts_below_threshold = [(f, a) for (f, a) in seen_facts if a < self.FORGET_THRESHOLD]
+	        if len(not_seen_facts) == 0 or len(seen_facts_below_threshold) > 0:
+	            weakest_fact = min(seen_facts, key = lambda t: t[1])
+	            return((weakest_fact[0], False))
+	
+	        # If none of the previously seen facts has an activation below the threshold, return a new fact
+	        return((not_seen_facts[0][0], True))
+	
+	
+	    def get_rate_of_forgetting(self, time, fact):
+	        # type: (int, Fact) -> float
+	        """
+	        Return the estimated rate of forgetting of the fact at the specified time
+	        """
+	        encounters = []
+	
+	        responses_for_fact = [r for r in self.responses if r.fact.fact_id == fact.fact_id and r.start_time < time]
+	        alpha = self.DEFAULT_ALPHA
+	
+	        # Calculate the activation by running through the sequence of previous responses
+	        for response in responses_for_fact:
+	            activation = self.calculate_activation_from_encounters(encounters, response.start_time)
+	            encounters.append(Encounter(activation, response.start_time, self.normalise_reaction_time(response), self.DEFAULT_ALPHA))
+	            alpha = self.estimate_alpha(encounters, activation, response, alpha)
+	
+	            # Update decay estimates of previous encounters
+	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
+	
+	        return(alpha)
+	
+	
+	    def calculate_activation(self, time, fact):
+	        # type: (int, Fact) -> float
+	        """
+	        Calculate the activation of a fact at the given time.
+	        """
+	
+	        encounters = []
+	
+	        responses_for_fact = [r for r in self.responses if r.fact.fact_id == fact.fact_id and r.start_time < time]
+	        alpha = self.DEFAULT_ALPHA
+	
+	        # Calculate the activation by running through the sequence of previous responses
+	        for response in responses_for_fact:
+	            activation = self.calculate_activation_from_encounters(encounters, response.start_time)
+	            encounters.append(Encounter(activation, response.start_time, self.normalise_reaction_time(response), self.DEFAULT_ALPHA))
+	            alpha = self.estimate_alpha(encounters, activation, response, alpha)
+	
+	            # Update decay estimates of previous encounters
+	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
+	        print(str(fact.answer) + ": "+ str(alpha))
+	        return(self.calculate_activation_from_encounters(encounters, time))
+	
+	
+	    def calculate_decay(self, activation, alpha):
+	        # type: (float, float) -> float
+	        """
+	        Calculate activation-dependent decay
+	        """
+	        return self.C * math.exp(activation) + alpha
+	
+	
+	    def estimate_alpha(self, encounters, activation, response, previous_alpha):
+	        # type: ([Encounter], float, Response, float) -> float
+	        """
+	        Estimate the rate of forgetting parameter (alpha) for an item.
+	        """
+	        if len(encounters) < 3:
+	            if response.alpha != 0:
+	                return(response.alpha)
+	            else:
+	                return(self.DEFAULT_ALPHA)
+	
+	        a_fit = previous_alpha
+	        reading_time = self.get_reading_time(response.fact.question)
+	        estimated_rt = self.estimate_reaction_time_from_activation(activation, reading_time)
+	        est_diff = estimated_rt - self.normalise_reaction_time(response)
+	
+	        if est_diff < 0:
+	            # Estimated RT was too short (estimated activation too high), so actual decay was larger
+	            a0 = a_fit
+	            a1 = a_fit + 0.05
+	        
+	        else:
+	            # Estimated RT was too long (estimated activation too low), so actual decay was smaller
+	            a0 = a_fit - 0.05
+	            a1 = a_fit
+	
+	        # Binary search between previous fit and proposed alpha
+	        for _ in range(6):
+	            # Adjust all decays to use the new alpha
+	            a0_diff = a0 - a_fit
+	            a1_diff = a1 - a_fit
+	            d_a0 = [e._replace(decay = e.decay + a0_diff) for e in encounters]
+	            d_a1 = [e._replace(decay = e.decay + a1_diff) for e in encounters]
+	
+	            # Calculate the reaction times from activation and compare against observed RTs
+	            encounter_window = encounters[max(1, len(encounters) - 5):]
+	            total_a0_error = self.calculate_predicted_reaction_time_error(encounter_window, d_a0, reading_time)
+	            total_a1_error = self.calculate_predicted_reaction_time_error(encounter_window, d_a1, reading_time)
+	
+	            # Adjust the search area based on the lowest total error
+	            ac = (a0 + a1) / 2
+	            if total_a0_error < total_a1_error:
+	                a1 = ac
+	            else:
+	                a0 = ac
+	        
+	        # The new alpha estimate is the average value in the remaining bracket
+	        return((a0 + a1) / 2)
+	
+	
+	    def calculate_activation_from_encounters(self, encounters, current_time):
+	        # type: ([Encounter], int) -> float
+	        included_encounters = [e for e in encounters if e.time < current_time]
+	
+	        if len(included_encounters) == 0:
+	            return(-float("inf"))
+	
+	        return(math.log(sum([math.pow((current_time - e.time) / 1000, -e.decay) for e in included_encounters])))
+	
+	
+	    def calculate_predicted_reaction_time_error(self, test_set, decay_adjusted_encounters, reading_time):
+	        # type: ([Encounter], [Encounter], Fact) -> float
+	        """
+	        Calculate the summed absolute difference between observed response times and those predicted based on a decay adjustment.
+	        """
+	        activations = [self.calculate_activation_from_encounters(decay_adjusted_encounters, e.time - 100) for e in test_set]
+	        rt = [self.estimate_reaction_time_from_activation(a, reading_time) for a in activations]
+	        rt_errors = [abs(e.reaction_time - rt) for (e, rt) in zip(test_set, rt)]
+	        return(sum(rt_errors))
+	
+	
+	    def estimate_reaction_time_from_activation(self, activation, reading_time):
+	        # type: (float, int) -> float
+	        """
+	        Calculate an estimated reaction time given a fact's activation and the expected reading time 
+	        """
+	        return((self.F * math.exp(-activation) + (reading_time / 1000)) * 1000)
+	
+	
+	    def get_max_reaction_time_for_fact(self, fact):
+	        # type: (Fact) -> float
+	        """
+	        Return the highest response time we can reasonably expect for a given fact
+	        """
+	        reading_time = self.get_reading_time(fact.question)
+	        max_rt = 1.5 * self.estimate_reaction_time_from_activation(self.FORGET_THRESHOLD, reading_time)
+	        return(max_rt)
+	
+	
+	    def get_reading_time(self, text):
+	        # type: (str) -> float
+	        """
+	        Return expected reading time in milliseconds for a given string
+	        """
+	        word_count = len(text.split())
+	
+	        if word_count > 1:
+	            character_count = len(text)
+	            return(max((-157.9 + character_count * 19.5), 300))
+	        
+	        return(300)
+	
+	    
+	    def normalise_reaction_time(self, response):
+	        # type: (Response) -> float
+	        """
+	        Cut off extremely long responses to keep the reaction time within reasonable bounds
+	        """
+	        rt = response.rt if response.correct else 60000
+	        max_rt = self.get_max_reaction_time_for_fact(response.fact)
+	        return(min(rt, max_rt))
+	
+	
+	    def export_data(self, path = None):
+	        # type: (str) -> DataFrame
+	        """
+	        Save the response data to the specified csv file, and return a copy of the pandas DataFrame.
+	        If no path is specified, return a CSV-formatted copy of the data instead.
+	        """
+	
+	        def calc_rof(row):
+	            return(self.get_rate_of_forgetting(row["start_time"] + 1, row["fact"]))
+	
+	        dat_resp = pd.DataFrame(self.responses)
+	        dat_facts = pd.DataFrame([r.fact for r in self.responses])
+	        dat = pd.concat([dat_resp, dat_facts], axis = 1)
+	
+	        # Add column for rate of forgetting estimate after each observation
+	        dat["alpha"] = dat.apply(calc_rof, axis = 1)
+	        dat.drop(columns = "fact", inplace = True)
+	
+	        # Add trial number column
+	        dat.index.name = "trial"
+	        dat.index = dat.index + 1
+	
+	        # Save to CSV file if a path was specified, otherwise return the CSV-formatted output
+	        if path is not None:
+	            dat.to_csv(path, encoding="UTF-8")
+	            return(dat)
+	        
+	        return(dat.to_csv())
+	__end__
+
+define inline_script slimstampen_setup_c
+	set description "Executes Python code"
+	___run__
+	m = SpacingModel()
+	
+	# Add some study facts to the model (you could also read them from a CSV file)
+	facts = [Fact(1, "bank", "banko"),
+			Fact(2, "cafe", "kafejo"),
+			Fact(3, "desert", "dezerto"),
+			Fact(4, "earth", "tero"),
+			Fact(5, "football", "futbalo"),
+			Fact(6, "game", "ludo"),
+			Fact(7, "history", "historio"),
+			Fact(8, "island", "insulo"),
+			Fact(9, "library", "biblioteko"),
+			Fact(10, "moon", "luno"),
+			Fact(11, "movies", "filmoj"),
+			Fact(12, "ocean", "oceano")]
+	
+	for fact in facts:
+		m.add_fact(fact)
+	__end__
+	___prepare__
+	from __future__ import division
+	import math
+	import pandas as pd
+	from collections import namedtuple
+	
+	Fact = namedtuple("Fact", "fact_id, question, answer")
+	Response = namedtuple("Response", "fact, start_time, rt, correct,alpha")
+	Encounter = namedtuple("Encounter", "activation, time, reaction_time, decay")
+	
+	
+	class SpacingModel(object):
+	
+	    # Model constants
+	    LOOKAHEAD_TIME = 15000
+	    FORGET_THRESHOLD = -0.8
+	    DEFAULT_ALPHA = 0.3
+	    C = 0.25
+	    F = 1.0
+	
+	    def __init__(self):
+	        self.facts = []
+	        self.responses = []
+	
+	    def add_fact(self, fact):
+	        # type: (Fact) -> None
+	        """
+	        Add a fact to the list of study items.
+	        """
+	        # Ensure that a fact with this ID does not exist already
+	        if next((f for f in self.facts if f.fact_id == fact.fact_id), None):
+	            raise RuntimeError(
+	                "Error while adding fact: There is already a fact with the same ID: {}. Each fact must have a unique ID".format(fact.fact_id))
+	
+	        self.facts.append(fact)
+	
+	
+	    def register_response(self, response):
+	        # type: (Response) -> None
+	        """
+	        Register a response.
+	        """
+	        # Prevent duplicate responses
+	        if next((r for r in self.responses if r.start_time == response.start_time), None):
+	            raise RuntimeError(
+	                "Error while registering response: A response has already been logged at this start_time: {}. Each response must occur at a unique start_time.".format(response.start_time))
+	
+	        self.responses.append(response)
+	
+	
+	    def get_next_fact(self, current_time):
+	        # type: (int) -> (Fact, bool)
+	        """
+	        Returns a tuple containing the fact that needs to be repeated most urgently and a boolean indicating whether this fact is new (True) or has been presented before (False).
+	        If none of the previously studied facts needs to be repeated right now, return a new fact instead.
+	        """
+	        # Calculate all fact activations in the near future
+	        fact_activations = [(f, self.calculate_activation(current_time + self.LOOKAHEAD_TIME, f)) for f in self.facts]
+	
+	        seen_facts = [(f, a) for (f, a) in fact_activations if a > -float("inf")]
+	        not_seen_facts = [(f, a) for (f, a) in fact_activations if a == -float("inf")]
+	
+	        # Prevent an immediate repetition of the same fact
+	        if len(seen_facts) > 2:
+	            last_response = self.responses[-1]
+	            seen_facts = [(f, a) for (f, a) in seen_facts if f.fact_id != last_response.fact.fact_id]
+	
+	        # Reinforce the weakest fact with an activation below the threshold
+	        seen_facts_below_threshold = [(f, a) for (f, a) in seen_facts if a < self.FORGET_THRESHOLD]
+	        if len(not_seen_facts) == 0 or len(seen_facts_below_threshold) > 0:
+	            weakest_fact = min(seen_facts, key = lambda t: t[1])
+	            return((weakest_fact[0], False))
+	
+	        # If none of the previously seen facts has an activation below the threshold, return a new fact
+	        return((not_seen_facts[0][0], True))
+	
+	
+	    def get_rate_of_forgetting(self, time, fact):
+	        # type: (int, Fact) -> float
+	        """
+	        Return the estimated rate of forgetting of the fact at the specified time
+	        """
+	        encounters = []
+	
+	        responses_for_fact = [r for r in self.responses if r.fact.fact_id == fact.fact_id and r.start_time < time]
+	        alpha = self.DEFAULT_ALPHA
+	
+	        # Calculate the activation by running through the sequence of previous responses
+	        for response in responses_for_fact:
+	            activation = self.calculate_activation_from_encounters(encounters, response.start_time)
+	            encounters.append(Encounter(activation, response.start_time, self.normalise_reaction_time(response), self.DEFAULT_ALPHA))
+	            alpha = self.estimate_alpha(encounters, activation, response, alpha)
+	
+	            # Update decay estimates of previous encounters
+	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
+	
+	        return(alpha)
+	
+	
+	    def calculate_activation(self, time, fact):
+	        # type: (int, Fact) -> float
+	        """
+	        Calculate the activation of a fact at the given time.
+	        """
+	
+	        encounters = []
+	
+	        responses_for_fact = [r for r in self.responses if r.fact.fact_id == fact.fact_id and r.start_time < time]
+	        alpha = self.DEFAULT_ALPHA
+	
+	        # Calculate the activation by running through the sequence of previous responses
+	        for response in responses_for_fact:
+	            activation = self.calculate_activation_from_encounters(encounters, response.start_time)
+	            encounters.append(Encounter(activation, response.start_time, self.normalise_reaction_time(response), self.DEFAULT_ALPHA))
+	            alpha = self.estimate_alpha(encounters, activation, response, alpha)
+	
+	            # Update decay estimates of previous encounters
+	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
+	        print(str(fact.answer) + ": "+ str(alpha))
+	        return(self.calculate_activation_from_encounters(encounters, time))
+	
+	
+	    def calculate_decay(self, activation, alpha):
+	        # type: (float, float) -> float
+	        """
+	        Calculate activation-dependent decay
+	        """
+	        return self.C * math.exp(activation) + alpha
+	
+	
+	    def estimate_alpha(self, encounters, activation, response, previous_alpha):
+	        # type: ([Encounter], float, Response, float) -> float
+	        """
+	        Estimate the rate of forgetting parameter (alpha) for an item.
+	        """
+	        if len(encounters) < 3:
+	            if response.alpha != 0:
+	                return(response.alpha)
+	            else:
+	                return(self.DEFAULT_ALPHA)
+	
+	        a_fit = previous_alpha
+	        reading_time = self.get_reading_time(response.fact.question)
+	        estimated_rt = self.estimate_reaction_time_from_activation(activation, reading_time)
+	        est_diff = estimated_rt - self.normalise_reaction_time(response)
+	
+	        if est_diff < 0:
+	            # Estimated RT was too short (estimated activation too high), so actual decay was larger
+	            a0 = a_fit
+	            a1 = a_fit + 0.05
+	        
+	        else:
+	            # Estimated RT was too long (estimated activation too low), so actual decay was smaller
+	            a0 = a_fit - 0.05
+	            a1 = a_fit
+	
+	        # Binary search between previous fit and proposed alpha
+	        for _ in range(6):
+	            # Adjust all decays to use the new alpha
+	            a0_diff = a0 - a_fit
+	            a1_diff = a1 - a_fit
+	            d_a0 = [e._replace(decay = e.decay + a0_diff) for e in encounters]
+	            d_a1 = [e._replace(decay = e.decay + a1_diff) for e in encounters]
+	
+	            # Calculate the reaction times from activation and compare against observed RTs
+	            encounter_window = encounters[max(1, len(encounters) - 5):]
+	            total_a0_error = self.calculate_predicted_reaction_time_error(encounter_window, d_a0, reading_time)
+	            total_a1_error = self.calculate_predicted_reaction_time_error(encounter_window, d_a1, reading_time)
+	
+	            # Adjust the search area based on the lowest total error
+	            ac = (a0 + a1) / 2
+	            if total_a0_error < total_a1_error:
+	                a1 = ac
+	            else:
+	                a0 = ac
+	        
+	        # The new alpha estimate is the average value in the remaining bracket
+	        return((a0 + a1) / 2)
+	
+	
+	    def calculate_activation_from_encounters(self, encounters, current_time):
+	        # type: ([Encounter], int) -> float
+	        included_encounters = [e for e in encounters if e.time < current_time]
+	
+	        if len(included_encounters) == 0:
+	            return(-float("inf"))
+	
+	        return(math.log(sum([math.pow((current_time - e.time) / 1000, -e.decay) for e in included_encounters])))
+	
+	
+	    def calculate_predicted_reaction_time_error(self, test_set, decay_adjusted_encounters, reading_time):
+	        # type: ([Encounter], [Encounter], Fact) -> float
+	        """
+	        Calculate the summed absolute difference between observed response times and those predicted based on a decay adjustment.
+	        """
+	        activations = [self.calculate_activation_from_encounters(decay_adjusted_encounters, e.time - 100) for e in test_set]
+	        rt = [self.estimate_reaction_time_from_activation(a, reading_time) for a in activations]
+	        rt_errors = [abs(e.reaction_time - rt) for (e, rt) in zip(test_set, rt)]
+	        return(sum(rt_errors))
+	
+	
+	    def estimate_reaction_time_from_activation(self, activation, reading_time):
+	        # type: (float, int) -> float
+	        """
+	        Calculate an estimated reaction time given a fact's activation and the expected reading time 
+	        """
+	        return((self.F * math.exp(-activation) + (reading_time / 1000)) * 1000)
+	
+	
+	    def get_max_reaction_time_for_fact(self, fact):
+	        # type: (Fact) -> float
+	        """
+	        Return the highest response time we can reasonably expect for a given fact
+	        """
+	        reading_time = self.get_reading_time(fact.question)
+	        max_rt = 1.5 * self.estimate_reaction_time_from_activation(self.FORGET_THRESHOLD, reading_time)
+	        return(max_rt)
+	
+	
+	    def get_reading_time(self, text):
+	        # type: (str) -> float
+	        """
+	        Return expected reading time in milliseconds for a given string
+	        """
+	        word_count = len(text.split())
+	
+	        if word_count > 1:
+	            character_count = len(text)
+	            return(max((-157.9 + character_count * 19.5), 300))
+	        
+	        return(300)
+	
+	    
+	    def normalise_reaction_time(self, response):
+	        # type: (Response) -> float
+	        """
+	        Cut off extremely long responses to keep the reaction time within reasonable bounds
+	        """
+	        rt = response.rt if response.correct else 60000
+	        max_rt = self.get_max_reaction_time_for_fact(response.fact)
+	        return(min(rt, max_rt))
+	
+	
+	    def export_data(self, path = None):
+	        # type: (str) -> DataFrame
+	        """
+	        Save the response data to the specified csv file, and return a copy of the pandas DataFrame.
+	        If no path is specified, return a CSV-formatted copy of the data instead.
+	        """
+	
+	        def calc_rof(row):
+	            return(self.get_rate_of_forgetting(row["start_time"] + 1, row["fact"]))
+	
+	        dat_resp = pd.DataFrame(self.responses)
+	        dat_facts = pd.DataFrame([r.fact for r in self.responses])
+	        dat = pd.concat([dat_resp, dat_facts], axis = 1)
+	
+	        # Add column for rate of forgetting estimate after each observation
+	        dat["alpha"] = dat.apply(calc_rof, axis = 1)
+	        dat.drop(columns = "fact", inplace = True)
+	
+	        # Add trial number column
+	        dat.index.name = "trial"
+	        dat.index = dat.index + 1
+	
+	        # Save to CSV file if a path was specified, otherwise return the CSV-formatted output
+	        if path is not None:
+	            dat.to_csv(path, encoding="UTF-8")
+	            return(dat)
+	        
+	        return(dat.to_csv())
+	__end__
+
+define inline_script slimstampen_setup_h
+	set description "Executes Python code"
+	___run__
+	m = SpacingModel()
+	
+	# Add some study facts to the model (you could also read them from a CSV file)
+	facts = [Fact(1, "art", "arto"),
+			Fact(2, "book", "libro"),
+			Fact(3, "country", "lando"),
+			Fact(4, "dictionary", "vortaro"),
+			Fact(5, "flowers", "floroj"),
+			Fact(6, "forest", "arbaro"),
+			Fact(7, "geography", "geografio"),
+			Fact(8, "house", "domo"),
+			Fact(9, "lake", "lago"),
+			Fact(10, "math", "matematiko"),
+			Fact(11, "mountain", "monto"),
+			Fact(12, "music", "muziko")]
+	
+	for fact in facts:
+		m.add_fact(fact)
+	__end__
+	___prepare__
+	from __future__ import division
+	import math
+	import pandas as pd
+	from collections import namedtuple
+	
+	Fact = namedtuple("Fact", "fact_id, question, answer")
+	Response = namedtuple("Response", "fact, start_time, rt, correct,alpha")
+	Encounter = namedtuple("Encounter", "activation, time, reaction_time, decay")
+	
+	
+	class SpacingModel(object):
+	
+	    # Model constants
+	    LOOKAHEAD_TIME = 15000
+	    FORGET_THRESHOLD = -0.8
+	    DEFAULT_ALPHA = 0.3
+	    C = 0.25
+	    F = 1.0
+	
+	    def __init__(self):
+	        self.facts = []
+	        self.responses = []
+	
+	    def add_fact(self, fact):
+	        # type: (Fact) -> None
+	        """
+	        Add a fact to the list of study items.
+	        """
+	        # Ensure that a fact with this ID does not exist already
+	        if next((f for f in self.facts if f.fact_id == fact.fact_id), None):
+	            raise RuntimeError(
+	                "Error while adding fact: There is already a fact with the same ID: {}. Each fact must have a unique ID".format(fact.fact_id))
+	
+	        self.facts.append(fact)
+	
+	
+	    def register_response(self, response):
+	        # type: (Response) -> None
+	        """
+	        Register a response.
+	        """
+	        # Prevent duplicate responses
+	        if next((r for r in self.responses if r.start_time == response.start_time), None):
+	            raise RuntimeError(
+	                "Error while registering response: A response has already been logged at this start_time: {}. Each response must occur at a unique start_time.".format(response.start_time))
+	
+	        self.responses.append(response)
+	
+	
+	    def get_next_fact(self, current_time):
+	        # type: (int) -> (Fact, bool)
+	        """
+	        Returns a tuple containing the fact that needs to be repeated most urgently and a boolean indicating whether this fact is new (True) or has been presented before (False).
+	        If none of the previously studied facts needs to be repeated right now, return a new fact instead.
+	        """
+	        # Calculate all fact activations in the near future
+	        fact_activations = [(f, self.calculate_activation(current_time + self.LOOKAHEAD_TIME, f)) for f in self.facts]
+	
+	        seen_facts = [(f, a) for (f, a) in fact_activations if a > -float("inf")]
+	        not_seen_facts = [(f, a) for (f, a) in fact_activations if a == -float("inf")]
+	
+	        # Prevent an immediate repetition of the same fact
+	        if len(seen_facts) > 2:
+	            last_response = self.responses[-1]
+	            seen_facts = [(f, a) for (f, a) in seen_facts if f.fact_id != last_response.fact.fact_id]
+	
+	        # Reinforce the weakest fact with an activation below the threshold
+	        seen_facts_below_threshold = [(f, a) for (f, a) in seen_facts if a < self.FORGET_THRESHOLD]
+	        if len(not_seen_facts) == 0 or len(seen_facts_below_threshold) > 0:
+	            weakest_fact = min(seen_facts, key = lambda t: t[1])
+	            return((weakest_fact[0], False))
+	
+	        # If none of the previously seen facts has an activation below the threshold, return a new fact
+	        return((not_seen_facts[0][0], True))
+	
+	
+	    def get_rate_of_forgetting(self, time, fact):
+	        # type: (int, Fact) -> float
+	        """
+	        Return the estimated rate of forgetting of the fact at the specified time
+	        """
+	        encounters = []
+	
+	        responses_for_fact = [r for r in self.responses if r.fact.fact_id == fact.fact_id and r.start_time < time]
+	        alpha = self.DEFAULT_ALPHA
+	
+	        # Calculate the activation by running through the sequence of previous responses
+	        for response in responses_for_fact:
+	            activation = self.calculate_activation_from_encounters(encounters, response.start_time)
+	            encounters.append(Encounter(activation, response.start_time, self.normalise_reaction_time(response), self.DEFAULT_ALPHA))
+	            alpha = self.estimate_alpha(encounters, activation, response, alpha)
+	
+	            # Update decay estimates of previous encounters
+	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
+	
+	        return(alpha)
+	
+	
+	    def calculate_activation(self, time, fact):
+	        # type: (int, Fact) -> float
+	        """
+	        Calculate the activation of a fact at the given time.
+	        """
+	
+	        encounters = []
+	
+	        responses_for_fact = [r for r in self.responses if r.fact.fact_id == fact.fact_id and r.start_time < time]
+	        alpha = self.DEFAULT_ALPHA
+	
+	        # Calculate the activation by running through the sequence of previous responses
+	        for response in responses_for_fact:
+	            activation = self.calculate_activation_from_encounters(encounters, response.start_time)
+	            encounters.append(Encounter(activation, response.start_time, self.normalise_reaction_time(response), self.DEFAULT_ALPHA))
+	            alpha = self.estimate_alpha(encounters, activation, response, alpha)
+	
+	            # Update decay estimates of previous encounters
+	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
+	        print(str(fact.answer) + ": "+ str(alpha))
+	        return(self.calculate_activation_from_encounters(encounters, time))
+	
+	
+	    def calculate_decay(self, activation, alpha):
+	        # type: (float, float) -> float
+	        """
+	        Calculate activation-dependent decay
+	        """
+	        return self.C * math.exp(activation) + alpha
+	
+	
+	    def estimate_alpha(self, encounters, activation, response, previous_alpha):
+	        # type: ([Encounter], float, Response, float) -> float
+	        """
+	        Estimate the rate of forgetting parameter (alpha) for an item.
+	        """
+	        if len(encounters) < 3:
+	            if response.alpha != 0:
+	                return(response.alpha)
+	            else:
+	                return(self.DEFAULT_ALPHA)
+	
+	        a_fit = previous_alpha
+	        reading_time = self.get_reading_time(response.fact.question)
+	        estimated_rt = self.estimate_reaction_time_from_activation(activation, reading_time)
+	        est_diff = estimated_rt - self.normalise_reaction_time(response)
+	
+	        if est_diff < 0:
+	            # Estimated RT was too short (estimated activation too high), so actual decay was larger
+	            a0 = a_fit
+	            a1 = a_fit + 0.05
+	        
+	        else:
+	            # Estimated RT was too long (estimated activation too low), so actual decay was smaller
+	            a0 = a_fit - 0.05
+	            a1 = a_fit
+	
+	        # Binary search between previous fit and proposed alpha
+	        for _ in range(6):
+	            # Adjust all decays to use the new alpha
+	            a0_diff = a0 - a_fit
+	            a1_diff = a1 - a_fit
+	            d_a0 = [e._replace(decay = e.decay + a0_diff) for e in encounters]
+	            d_a1 = [e._replace(decay = e.decay + a1_diff) for e in encounters]
+	
+	            # Calculate the reaction times from activation and compare against observed RTs
+	            encounter_window = encounters[max(1, len(encounters) - 5):]
+	            total_a0_error = self.calculate_predicted_reaction_time_error(encounter_window, d_a0, reading_time)
+	            total_a1_error = self.calculate_predicted_reaction_time_error(encounter_window, d_a1, reading_time)
+	
+	            # Adjust the search area based on the lowest total error
+	            ac = (a0 + a1) / 2
+	            if total_a0_error < total_a1_error:
+	                a1 = ac
+	            else:
+	                a0 = ac
+	        
+	        # The new alpha estimate is the average value in the remaining bracket
+	        return((a0 + a1) / 2)
+	
+	
+	    def calculate_activation_from_encounters(self, encounters, current_time):
+	        # type: ([Encounter], int) -> float
+	        included_encounters = [e for e in encounters if e.time < current_time]
+	
+	        if len(included_encounters) == 0:
+	            return(-float("inf"))
+	
+	        return(math.log(sum([math.pow((current_time - e.time) / 1000, -e.decay) for e in included_encounters])))
+	
+	
+	    def calculate_predicted_reaction_time_error(self, test_set, decay_adjusted_encounters, reading_time):
+	        # type: ([Encounter], [Encounter], Fact) -> float
+	        """
+	        Calculate the summed absolute difference between observed response times and those predicted based on a decay adjustment.
+	        """
+	        activations = [self.calculate_activation_from_encounters(decay_adjusted_encounters, e.time - 100) for e in test_set]
+	        rt = [self.estimate_reaction_time_from_activation(a, reading_time) for a in activations]
+	        rt_errors = [abs(e.reaction_time - rt) for (e, rt) in zip(test_set, rt)]
+	        return(sum(rt_errors))
+	
+	
+	    def estimate_reaction_time_from_activation(self, activation, reading_time):
+	        # type: (float, int) -> float
+	        """
+	        Calculate an estimated reaction time given a fact's activation and the expected reading time 
+	        """
+	        return((self.F * math.exp(-activation) + (reading_time / 1000)) * 1000)
+	
+	
+	    def get_max_reaction_time_for_fact(self, fact):
+	        # type: (Fact) -> float
+	        """
+	        Return the highest response time we can reasonably expect for a given fact
+	        """
+	        reading_time = self.get_reading_time(fact.question)
+	        max_rt = 1.5 * self.estimate_reaction_time_from_activation(self.FORGET_THRESHOLD, reading_time)
+	        return(max_rt)
+	
+	
+	    def get_reading_time(self, text):
+	        # type: (str) -> float
+	        """
+	        Return expected reading time in milliseconds for a given string
+	        """
+	        word_count = len(text.split())
+	
+	        if word_count > 1:
+	            character_count = len(text)
+	            return(max((-157.9 + character_count * 19.5), 300))
+	        
+	        return(300)
+	
+	    
+	    def normalise_reaction_time(self, response):
+	        # type: (Response) -> float
+	        """
+	        Cut off extremely long responses to keep the reaction time within reasonable bounds
+	        """
+	        rt = response.rt if response.correct else 60000
+	        max_rt = self.get_max_reaction_time_for_fact(response.fact)
+	        return(min(rt, max_rt))
+	
+	
+	    def export_data(self, path = None):
+	        # type: (str) -> DataFrame
+	        """
+	        Save the response data to the specified csv file, and return a copy of the pandas DataFrame.
+	        If no path is specified, return a CSV-formatted copy of the data instead.
+	        """
+	
+	        def calc_rof(row):
+	            return(self.get_rate_of_forgetting(row["start_time"] + 1, row["fact"]))
+	
+	        dat_resp = pd.DataFrame(self.responses)
+	        dat_facts = pd.DataFrame([r.fact for r in self.responses])
+	        dat = pd.concat([dat_resp, dat_facts], axis = 1)
+	
+	        # Add column for rate of forgetting estimate after each observation
+	        dat["alpha"] = dat.apply(calc_rof, axis = 1)
+	        dat.drop(columns = "fact", inplace = True)
+	
+	        # Add trial number column
+	        dat.index.name = "trial"
+	        dat.index = dat.index + 1
+	
+	        # Save to CSV file if a path was specified, otherwise return the CSV-formatted output
+	        if path is not None:
+	            dat.to_csv(path, encoding="UTF-8")
+	            return(dat)
+	        
+	        return(dat.to_csv())
+	__end__
+
+define sequence test_b
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run test_instructions_b always
+	run variables_b always
+	run word_loop_b always
+	run test_feedback_b always
+	run new_feedback_b always
+
+define sequence test_c
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run test_instructions_c always
+	run variables_c always
+	run word_loop_c always
+	run test_feedback_c always
+	run test_feedback_board_c always
+
+define inline_script test_feedback_b
+	set description "Führt Python Code aus"
+	___run__
+	acc_test = 100.*self.get('correct_test')/self.get('responses_test')
+	
+	exp.set('accuracy_test', acc_test)
+	exp.set('acc_test', acc_test)
+	
+	if self.get('acc_test') > 90:
+		exp.set('feedback_test', 'Excellent, well done!')
+	elif self.get('acc_test') > 75:
+		exp.set('feedback_test', 'Pretty good!')
+	else:
+		exp.set('feedback_test', 'Come on, you can do better!')
+		
+	#data_test = {'Score':[self.get('correct_test')], 'Possible Score':[self.get('responses_test')], 
+	#Accuracy':[self.get('accuracy_test')]} 
+	
+	list_of_tuples = list(zip(word, translation, key_re, cor, rt_word)) 
+	    
+	# Assign data to tuples.  
+	list_of_tuples   
+	  
+	  
+	# Converting lists of tuples into  
+	# pandas Dataframe.  
+	df_test = pd.DataFrame(list_of_tuples, columns = ['english', 'translation', 'response', 'correct', 'rt'])
+	     
+	# Print data.  
+	df_test 
+	# Create DataFrame 
+	#df_test = pd.DataFrame(data_test)
+	#df.to_csv("your_name.csv", encoding = 'utf-8') 										
+																															
+	def export_output(dat, path = None):
+	        # type: (str) -> DataFrame
+	        
+	        if path is not None:
+	            dat.to_csv(path, encoding="UTF-8")
+	            return(dat)
+	        
+	        return(dat.to_csv())
+	ex_test = export_output(df_test)																																																																		
+	log.write(ex_test)
+	__end__
+	set _prepare ""
+
+define feedback test_feedback_board_c
+	set reset_variables yes
+	set duration keypress
+	set description "Gibt Versuchspersonen Feedback"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Congratulation. You finished the testing phase." x=0 y=0 z_index=0
+
+define inline_script test_feedback_c
+	set description "Führt Python Code aus"
+	___run__
+	acc_test = 100.*self.get('correct_test')/self.get('responses_test')
+	
+	exp.set('accuracy_test', acc_test)
+	exp.set('acc_test', acc_test)
+	
+	if self.get('acc_test') > 90:
+		exp.set('feedback_test', 'Excellent, well done!')
+	elif self.get('acc_test') > 75:
+		exp.set('feedback_test', 'Pretty good!')
+	else:
+		exp.set('feedback_test', 'Come on, you can do better!')
+		
+	#data_test = {'Score':[self.get('correct_test')], 'Possible Score':[self.get('responses_test')], 
+	#Accuracy':[self.get('accuracy_test')]} 
+	
+	list_of_tuples = list(zip(word, translation, cor, key_re, rt_word)) 
+	    
+	# Assign data to tuples.  
+	list_of_tuples   
+	  
+	  
+	# Converting lists of tuples into  
+	# pandas Dataframe.  
+	df_test = pd.DataFrame(list_of_tuples, columns = ['english', 'translation','correct','response', 'rt'])
+	     
+	# Print data.  
+	df_test 
+	# Create DataFrame 
+	#df_test = pd.DataFrame(data_test)
+	#df.to_csv("your_name.csv", encoding = 'utf-8') 										
+																															
+	def export_output(dat, path = None):
+	        # type: (str) -> DataFrame
+	        
+	        if path is not None:
+	            dat.to_csv(path, encoding="UTF-8")
+	            return(dat)
+	        
+	        return(dat.to_csv())
+	ex_test = export_output(df_test)																																																																		
+	log.write(ex_test)
+	__end__
+	set _prepare ""
+
+define inline_script test_feedback_h
+	set description "Führt Python Code aus"
+	___run__
+	acc_test = 100.*self.get('correct_test')/self.get('responses_test')
+	
+	exp.set('accuracy_test', acc_test)
+	exp.set('acc_test', acc_test)
+	
+	if self.get('acc_test') > 90:
+		exp.set('feedback_test', 'Excellent, well done!')
+	elif self.get('acc_test') > 75:
+		exp.set('feedback_test', 'Pretty good!')
+	else:
+		exp.set('feedback_test', 'Come on, you can do better!')
+		
+	#data_test = {'Score':[self.get('correct_test')], 'Possible Score':[self.get('responses_test')], 
+	#Accuracy':[self.get('accuracy_test')]} 
+	
+	list_of_tuples = list(zip(word, translation, key_re, cor, rt_word)) 
+	    
+	# Assign data to tuples.  
+	list_of_tuples   
+	  
+	  
+	# Converting lists of tuples into  
+	# pandas Dataframe.  
+	df_test = pd.DataFrame(list_of_tuples, columns = ['english', 'translation', 'response', 'correct', 'rt'])
+	     
+	# Print data.  
+	df_test 
+	# Create DataFrame 
+	#df_test = pd.DataFrame(data_test)
+	#df.to_csv("your_name.csv", encoding = 'utf-8') 										
+																															
+	def export_output(dat, path = None):
+	        # type: (str) -> DataFrame
+	        
+	        if path is not None:
+	            dat.to_csv(path, encoding="UTF-8")
+	            return(dat)
+	        
+	        return(dat.to_csv())
+	ex_test = export_output(df_test)																																																																		
+	log.write(ex_test)
+	__end__
+	set _prepare ""
+
+define sequence test_h
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run test_instructions_h always
+	run variables_h always
+	run word_loop_h always
+	run test_feedback_h always
+	run new_feedback_h always
+
+define sketchpad test_instructions_b
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="In the following section your learning progress will be tested. Please type the corresponding translation." x=0 y=0 z_index=0
+
+define sketchpad test_instructions_c
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="In the following section your learning progress will be tested. Please type the corresponding translation." x=0 y=0 z_index=0
+
+define sketchpad test_instructions_h
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="In the following section your learning progress will be tested. Please type the corresponding translation." x=0 y=0 z_index=0
+
+define inline_script test_script_b
+	set description "Führt Python Code aus"
+	___run__
+	trial_start_test = clock.time()
+	
+	# Get next fact from the model
+	voc = var.english
+	ans = var.esperanto
+	
+	# Show prompt
+	my_canvas = Canvas()
+	my_canvas.text(voc, font_size = 30)
+	my_canvas.prepare()
+	my_canvas.show()
+	
+	# Listen for keyboard input and show keypresses on screen as they occur
+	my_keyboard = Keyboard()
+	my_keyboard.timeout = 3000
+	keyboard_response = ""
+	erased_answer = False
+	rt = float("inf")
+	
+	def listappend (dat, word):
+	    dat.append(word)
+	    return dat
+	
+	# Keep listening for key presses until the user presses Enter
+	while True:
+	    key, time = my_keyboard.get_key()
+	
+	    # The first keypress determines the response time
+	    if keyboard_response == "" and not erased_answer:
+	        rt = clock.time() - trial_start_test
+	
+	    #if keyboard_response == NoneType:
+	    #print(u'Keyboard responce empty')
+	
+	    if key == "return":
+	        break
+	
+	    if key == "backspace":
+	        keyboard_response = keyboard_response[:-1]
+	        # If the answer is completely erased, the RT is no longer informative
+	        if keyboard_response == "":
+	            erased_answer = True
+	            rt = float("inf")
+	
+	    elif key == "space":
+	        keyboard_response += " "
+	
+	    elif not key == None:
+	
+	        keyboard_response += my_keyboard.to_chr(key)
+	
+	    # Update what's on screen'
+	    my_canvas.clear()
+	    my_canvas.text(voc, font_size = 30)
+	
+	    my_canvas.text(keyboard_response, y = 100)
+	
+	    my_canvas.prepare()
+	    my_canvas.show()
+	
+	# Check if the response is correct
+	correct = keyboard_response == ans
+	
+	# Set score
+	exp.set('responses_test', self.get('responses_test')+1)
+	if correct:
+	    exp.set('correct_test', self.get('correct_test')+1)
+	
+	word = listappend(word, voc)
+	translation = listappend(translation, ans)
+	cor = listappend(cor, correct)
+	rt_word = listappend(rt_word, rt)
+	key_re = listappend(key_re, keyboard_response)
+	
+	# Clear the screen between trials
+	my_canvas.clear()
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.inter_trial_test)
+	
+	# Check if time is up
+	if clock.time() - var.session_start_test >= var.session_test:
+	    var.time_up = True
+	
+	# Increment trial number
+	var.trial_num += 1
+	__end__
+	set _prepare ""
+
+define inline_script test_script_c
+	set description "Führt Python Code aus"
+	___run__
+	trial_start_test = clock.time()
+	
+	# Get next fact from the model
+	voc = var.english
+	ans = var.esperanto
+	
+	# Show prompt
+	my_canvas = Canvas()
+	my_canvas.text(voc, font_size = 30)
+	my_canvas.prepare()
+	my_canvas.show()
+	
+	# Listen for keyboard input and show keypresses on screen as they occur
+	my_keyboard = Keyboard()
+	my_keyboard.timeout = 3000
+	keyboard_response = ""
+	erased_answer = False
+	rt = float("inf")
+	
+	def listappend (dat, word):
+	    dat.append(word)
+	    return dat
+	
+	# Keep listening for key presses until the user presses Enter
+	while True:
+	    key, time = my_keyboard.get_key()
+	
+	    # The first keypress determines the response time
+	    if keyboard_response == "" and not erased_answer:
+	        rt = clock.time() - trial_start_test
+	
+	    #if keyboard_response == NoneType:
+	    #print(u'Keyboard responce empty')
+	
+	    if key == "return":
+	        break
+	
+	    if key == "backspace":
+	        keyboard_response = keyboard_response[:-1]
+	        # If the answer is completely erased, the RT is no longer informative
+	        if keyboard_response == "":
+	            erased_answer = True
+	            rt = float("inf")
+	
+	    elif key == "space":
+	        keyboard_response += " "
+	
+	    elif not key == None:
+	
+	        keyboard_response += my_keyboard.to_chr(key)
+	
+	    # Update what's on screen'
+	    my_canvas.clear()
+	    my_canvas.text(voc, font_size = 30)
+	
+	    my_canvas.text(keyboard_response, y = 100)
+	
+	    my_canvas.prepare()
+	    my_canvas.show()
+	
+	# Check if the response is correct
+	correct = keyboard_response == ans
+	
+	# Set score
+	exp.set('responses_test', self.get('responses_test')+1)
+	if correct:
+	    exp.set('correct_test', self.get('correct_test')+1)
+	
+	word = listappend(word, voc)
+	translation = listappend(translation, ans)
+	cor = listappend(cor, correct)
+	rt_word = listappend(rt_word, rt)
+	key_re = listappend(key_re, keyboard_response)
+	
+	# Clear the screen between trials
+	my_canvas.clear()
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.inter_trial_test)
+	
+	# Check if time is up
+	if clock.time() - var.session_start_test >= var.session_test:
+	    var.time_up = True
+	
+	# Increment trial number
+	var.trial_num += 1
+	__end__
+	set _prepare ""
+
+define inline_script test_script_h
+	set description "Führt Python Code aus"
+	___run__
+	trial_start_test = clock.time()
+	
+	# Get next fact from the model
+	voc = var.english
+	ans = var.esperanto
+	
+	# Show prompt
+	my_canvas = Canvas()
+	my_canvas.text(voc, font_size = 30)
+	my_canvas.prepare()
+	my_canvas.show()
+	
+	# Listen for keyboard input and show keypresses on screen as they occur
+	my_keyboard = Keyboard()
+	my_keyboard.timeout = 3000
+	keyboard_response = ""
+	erased_answer = False
+	rt = float("inf")
+	
+	def listappend (dat, word):
+	    dat.append(word)
+	    return dat
+	
+	# Keep listening for key presses until the user presses Enter
+	while True:
+	    key, time = my_keyboard.get_key()
+	
+	    # The first keypress determines the response time
+	    if keyboard_response == "" and not erased_answer:
+	        rt = clock.time() - trial_start_test
+	
+	    #if keyboard_response == NoneType:
+	    #print(u'Keyboard responce empty')
+	
+	    if key == "return":
+	        break
+	
+	    if key == "backspace":
+	        keyboard_response = keyboard_response[:-1]
+	        # If the answer is completely erased, the RT is no longer informative
+	        if keyboard_response == "":
+	            erased_answer = True
+	            rt = float("inf")
+	
+	    elif key == "space":
+	        keyboard_response += " "
+	
+	    elif not key == None:
+	
+	        keyboard_response += my_keyboard.to_chr(key)
+	
+	    # Update what's on screen'
+	    my_canvas.clear()
+	    my_canvas.text(voc, font_size = 30)
+	
+	    my_canvas.text(keyboard_response, y = 100)
+	
+	    my_canvas.prepare()
+	    my_canvas.show()
+	
+	# Check if the response is correct
+	correct = keyboard_response == ans
+	
+	# Set score
+	exp.set('responses_test', self.get('responses_test')+1)
+	if correct:
+	    exp.set('correct_test', self.get('correct_test')+1)
+	
+	word = listappend(word, voc)
+	translation = listappend(translation, ans)
+	cor = listappend(cor, correct)
+	rt_word = listappend(rt_word, rt)
+	key_re = listappend(key_re, keyboard_response)
+	
+	# Clear the screen between trials
+	my_canvas.clear()
+	my_canvas.prepare()
+	my_canvas.show()
+	clock.sleep(var.inter_trial_test)
+	
+	# Check if time is up
+	if clock.time() - var.session_start_test >= var.session_test:
+	    var.time_up = True
+	
+	# Increment trial number
+	var.trial_num += 1
+	__end__
+	set _prepare ""
+
+define sequence test_sequence_b
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run test_script_b always
+
+define sequence test_sequence_c
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run test_script_c always
+
+define sequence test_sequence_h
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run test_script_h always
+
+define sequence trial_sequence_b
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run present_trial_b always
+
+define sequence trial_sequence_c
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run present_trial_c always
+
+define sequence trial_sequence_h
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run present_trial_h always
+
+define inline_script variables_b
+	set description "Führt Python Code aus"
+	___run__
+	# Settings
+	# Keep track of trial number
+	var.trial_num = 1
+	var.session_start_test = clock.time()
+	var.voc = 'english'
+	var.ans = 'french'
+	var.inter_trial_test = 200
+	exp.set('score_test', 100)
+	exp.set('correct_test', 0)
+	exp.set('responses_test', 0)
+	
+	var.session_test = 10000
+	var.feedback_test = 800
+	var.inter_trial_test = 200
+	word = []
+	translation = []
+	cor = []
+	rt_word = []
+	key_re = []
+	__end__
+	set _prepare ""
+
+define inline_script variables_c
+	set description "Führt Python Code aus"
+	___run__
+	# Settings
+	# Keep track of trial number
+	var.trial_num = 1
+	var.session_start_test = clock.time()
+	var.voc = 'english'
+	var.ans = 'esperanto'
+	var.inter_trial_test = 200
+	exp.set('score_test', 100)
+	exp.set('correct_test', 0)
+	exp.set('responses_test', 0)
+	
+	var.session_test = 10000
+	var.feedback_test = 800
+	var.inter_trial_test = 200
+	word = []
+	translation = []
+	cor = []
+	rt_word = []
+	key_re = []
+	__end__
+	set _prepare ""
+
+define inline_script variables_h
+	set description "Führt Python Code aus"
+	___run__
+	# Settings
+	# Keep track of trial number
+	var.trial_num = 1
+	var.session_start_test = clock.time()
+	var.voc = 'english'
+	var.ans = 'french'
+	var.inter_trial_test = 200
+	exp.set('score_test', 100)
+	exp.set('correct_test', 0)
+	exp.set('responses_test', 0)
+	
+	var.session_test = 10000
+	var.feedback_test = 800
+	var.inter_trial_test = 200
+	word = []
+	translation = []
+	cor = []
+	rt_word = []
+	key_re = []
+	__end__
+	set _prepare ""
+
+define loop while_there_is_time_left_b
+	set source table
+	set repeat 1000
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if "[time_up] = yes"
+	setcycle 0 ignore_this_variable 1
+	run trial_sequence_b
+
+define loop while_there_is_time_left_c
+	set source table
+	set repeat 1000
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if "[time_up] = yes"
+	setcycle 0 ignore_this_variable 1
+	run trial_sequence_c
+
+define loop while_there_is_time_left_h
+	set source table
+	set repeat 1000
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if "[time_up] = yes"
+	setcycle 0 ignore_this_variable 1
+	run trial_sequence_h
+
+define loop word_loop_b
+	set source_file ""
+	set source table
+	set repeat 1
+	set order sequential
+	set description "Führt wiederholt ein anderes Item aus"
+	set cycles 12
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 english art
+	setcycle 0 esperanto arto
+	setcycle 1 english book
+	setcycle 1 esperanto libro
+	setcycle 2 english country
+	setcycle 2 esperanto lando
+	setcycle 3 english dictionary
+	setcycle 3 esperanto vortaro
+	setcycle 4 english flowers
+	setcycle 4 esperanto floroj
+	setcycle 5 english forest
+	setcycle 5 esperanto arbaro
+	setcycle 6 english geography
+	setcycle 6 esperanto geografio
+	setcycle 7 english house
+	setcycle 7 esperanto domo
+	setcycle 8 english lake
+	setcycle 8 esperanto lago
+	setcycle 9 english math
+	setcycle 9 esperanto matematiko
+	setcycle 10 english mountain
+	setcycle 10 esperanto monto
+	setcycle 11 english music
+	setcycle 11 esperanto muziko
+	run test_sequence_b
+
+define loop word_loop_c
+	set source_file ""
+	set source table
+	set repeat 1
+	set order sequential
+	set description "Führt wiederholt ein anderes Item aus"
+	set cycles 12
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 english bank
+	setcycle 0 esperanto banko
+	setcycle 1 english cafe
+	setcycle 1 esperanto kafejo
+	setcycle 2 english desert
+	setcycle 2 esperanto dezerto
+	setcycle 3 english earth
+	setcycle 3 esperanto tero
+	setcycle 4 english football
+	setcycle 4 esperanto futbalo
+	setcycle 5 english game
+	setcycle 5 esperanto ludo
+	setcycle 6 english history
+	setcycle 6 esperanto historio
+	setcycle 7 english island
+	setcycle 7 esperanto insulo
+	setcycle 8 english library
+	setcycle 8 esperanto biblioteko
+	setcycle 9 english moon
+	setcycle 9 esperanto luno
+	setcycle 10 english movies
+	setcycle 10 esperanto filmoj
+	setcycle 11 english ocean
+	setcycle 11 esperanto oceano
+	run test_sequence_c
+
+define loop word_loop_h
+	set source_file ""
+	set source table
+	set repeat 1
+	set order sequential
+	set description "Führt wiederholt ein anderes Item aus"
+	set cycles 12
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 english art
+	setcycle 0 esperanto arto
+	setcycle 1 english book
+	setcycle 1 esperanto libro
+	setcycle 2 english country
+	setcycle 2 esperanto lando
+	setcycle 3 english dictionary
+	setcycle 3 esperanto vortaro
+	setcycle 4 english flowers
+	setcycle 4 esperanto floroj
+	setcycle 5 english forest
+	setcycle 5 esperanto arbaro
+	setcycle 6 english geography
+	setcycle 6 esperanto geografio
+	setcycle 7 english house
+	setcycle 7 esperanto domo
+	setcycle 8 english lake
+	setcycle 8 esperanto lago
+	setcycle 9 english math
+	setcycle 9 esperanto matematiko
+	setcycle 10 english mountain
+	setcycle 10 esperanto monto
+	setcycle 11 english music
+	setcycle 11 esperanto muziko
+	run test_sequence_h
+
