@@ -152,8 +152,8 @@ define sequence experiment
 	set description "Runs a number of items in sequence"
 	run MixedDesign always
 	run hello always
-	run experiment_loop_odd "[counterBalancing] = experiment"
-	run experiment_loop_even "[counterBalancing] = control"
+	run experiment_loop_odd "[counterBalancing] = control"
+	run experiment_loop_even "[counterBalancing] = experiment"
 	run Debriefing always
 
 define sequence experiment_loop_even
@@ -165,7 +165,7 @@ define sequence experiment_loop_even
 	run test_b "[experiment] = button"
 	run Break always
 	run control always
-	run test_c always
+	run test_c never
 
 define sequence experiment_loop_odd
 	set flush_keyboard yes
@@ -257,7 +257,7 @@ define inline_script learning_session_setup_b
 	var.trial_num = 1
 	
 	# Settings
-	var.session_duration = 60000
+	var.session_duration = 600000
 	var.feedback_duration = 800
 	var.inter_trial_interval = 200
 	
@@ -281,7 +281,7 @@ define inline_script learning_session_setup_c
 	var.trial_num = 1
 	
 	# Settings
-	var.session_duration = 1000
+	var.session_duration = 600000
 	var.feedback_duration = 800
 	var.inter_trial_interval = 200
 	__end__
@@ -300,7 +300,7 @@ define inline_script learning_session_setup_h
 	var.trial_num = 1
 	
 	# Settings
-	var.session_duration = 60000
+	var.session_duration = 600000
 	var.feedback_duration = 800
 	var.inter_trial_interval = 200
 	
@@ -588,7 +588,8 @@ define inline_script present_trial_h
 	        hint = 1
 	        if cnt-1 < len(answer)/2:
 	            cnt += 1
-	            exp.set('score', self.get('score')-10)
+	            if cnt != 1:
+	                exp.set('score', self.get('score')-10)
 	
 	    else:
 	        hint = 0
@@ -596,7 +597,7 @@ define inline_script present_trial_h
 	    # The first keypress determines the response time
 	    if keyboard_response == "" and not erased_answer:
 	        rt = clock.time() - trial_start_time
-	        
+	
 	
 	    if key == "backspace":
 	        keyboard_response = keyboard_response[:-1]
@@ -744,7 +745,11 @@ define inline_script slimstampen_setup_b
 			Fact(9, "lake", "lago"),
 			Fact(10, "math", "matematiko"),
 			Fact(11, "mountain", "monto"),
-			Fact(12, "music", "muziko")]
+			Fact(12, "music", "muziko"),
+			Fact(13, "wife", "edzino"),
+			Fact(14, "teacher", "instruistino"),
+			Fact(15, "professor", "profesorino"),
+			Fact(16, "policemen", "polico")]
 	
 	for fact in facts:
 		m.add_fact(fact)
@@ -1039,7 +1044,11 @@ define inline_script slimstampen_setup_c
 			Fact(9, "library", "biblioteko"),
 			Fact(10, "moon", "luno"),
 			Fact(11, "movies", "filmoj"),
-			Fact(12, "ocean", "oceano")]
+			Fact(12, "ocean", "oceano"),
+			Fact(13, "uncle", "onklo"),
+			Fact(14, "son", "filo"),
+			Fact(15, "postman", "leterportisto"),
+			Fact(16, "nurse", "flegistino")]
 	
 	for fact in facts:
 		m.add_fact(fact)
@@ -1334,7 +1343,11 @@ define inline_script slimstampen_setup_h
 			Fact(9, "lake", "lago"),
 			Fact(10, "math", "matematiko"),
 			Fact(11, "mountain", "monto"),
-			Fact(12, "music", "muziko")]
+			Fact(12, "music", "muziko"),
+			Fact(13, "wife", "edzino"),
+			Fact(14, "teacher", "instruistino"),
+			Fact(15, "professor", "profesorino"),
+			Fact(16, "policemen", "polico")]
 	
 	for fact in facts:
 		m.add_fact(fact)
@@ -2224,7 +2237,7 @@ define loop word_loop_b
 	set repeat 1
 	set order sequential
 	set description "Führt wiederholt ein anderes Item aus"
-	set cycles 12
+	set cycles 16
 	set continuous no
 	set break_if_on_first yes
 	set break_if never
@@ -2252,6 +2265,14 @@ define loop word_loop_b
 	setcycle 10 esperanto monto
 	setcycle 11 english music
 	setcycle 11 esperanto muziko
+	setcycle 12 english wife
+	setcycle 12 esperanto edzino
+	setcycle 13 english teacher
+	setcycle 13 esperanto instruistino
+	setcycle 14 english professor
+	setcycle 14 esperanto profesorino
+	setcycle 15 english policemen
+	setcycle 15 esperanto polico
 	run test_sequence_b
 
 define loop word_loop_c
@@ -2260,7 +2281,7 @@ define loop word_loop_c
 	set repeat 1
 	set order sequential
 	set description "Führt wiederholt ein anderes Item aus"
-	set cycles 12
+	set cycles 17
 	set continuous no
 	set break_if_on_first yes
 	set break_if never
@@ -2288,6 +2309,16 @@ define loop word_loop_c
 	setcycle 10 esperanto filmoj
 	setcycle 11 english ocean
 	setcycle 11 esperanto oceano
+	setcycle 12 english uncle
+	setcycle 12 esperanto onklo
+	setcycle 13 english son
+	setcycle 13 esperanto filo
+	setcycle 14 english postman
+	setcycle 14 esperanto leterportisto
+	setcycle 15 english nurse
+	setcycle 15 esperanto flegistino
+	setcycle 16 english ""
+	setcycle 16 esperanto ""
 	run test_sequence_c
 
 define loop word_loop_h
@@ -2296,7 +2327,7 @@ define loop word_loop_h
 	set repeat 1
 	set order sequential
 	set description "Führt wiederholt ein anderes Item aus"
-	set cycles 12
+	set cycles 16
 	set continuous no
 	set break_if_on_first yes
 	set break_if never
@@ -2324,5 +2355,13 @@ define loop word_loop_h
 	setcycle 10 esperanto monto
 	setcycle 11 english music
 	setcycle 11 esperanto muziko
+	setcycle 12 english wife
+	setcycle 12 esperanto edzino
+	setcycle 13 english teacher
+	setcycle 13 esperanto instruistino
+	setcycle 14 english professor
+	setcycle 14 esperanto profesorino
+	setcycle 15 english policemen
+	setcycle 15 esperanto polico
 	run test_sequence_h
 
