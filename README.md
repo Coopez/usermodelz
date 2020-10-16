@@ -13,13 +13,15 @@ With anaconda (cross-platform) run:
 
 ### create an environment
 conda create -n opensesame-py3 python=3.7
+
 conda activate opensesame-py3
 
 ### set path and install packages
 conda config --add channels cogsci --add channels conda-forge
+
 conda install python-opensesame opensesame-extension-osweb opensesame-plugin-psychopy psychopy rapunzel python-pygaze
 
-pip3 install soundfile pygame yolk3k opensesame-extension-osf python-qtpip 
+pip3 install soundfile pygame yolk3k opensesame-extension-osf python-qtpip http://files.cogsci.nl/expyriment-0.10.0+opensesame2-py3-none-any.whl
 
 ## Run
 start OpenSesame by running:
