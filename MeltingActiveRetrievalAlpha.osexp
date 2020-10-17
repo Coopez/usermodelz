@@ -381,7 +381,6 @@ define sequence experiment
 	set flush_keyboard yes
 	set description "Runs a number of items in sequence"
 	run MixedDesign always
-	run distraction_task always
 	run hello always
 	run experiment_loop_odd "[counterBalancing] = control"
 	run experiment_loop_even "[counterBalancing] = experiment"
