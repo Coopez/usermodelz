@@ -422,6 +422,7 @@ define sequence experiment_loop_odd
 	run distraction_task always
 	run test_h "[experiment] = 'hint'"
 	run test_b "[experiment] = 'button'"
+	run debriefing_sequence always
 
 define inline_script feedback
 	set description "Executes Python code"
@@ -533,7 +534,7 @@ define form_text_display goodbye
 define sketchpad hello
 	set duration keypress
 	set description "Präsentiert Stimuli"
-	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Welcome to the experiment. In the following you will have 2 learning sessions. The experiment should take around 35 minutes." x=0 y=0 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Welcome to the experiment. In the following you will have 2 learning sessions. The experiment should take around 35 minutes. You will learn vocabulary from Esperanto." x=0 y=0 z_index=0
 
 define inline_script imports
 	set description "Executes Python code"
@@ -671,12 +672,6 @@ define logger logger
 	log count_trial_sequence
 	log correct
 	log subject_nr
-
-define feedback new_feedback_b
-	set reset_variables yes
-	set duration keypress
-	set description "Gibt Versuchspersonen Feedback"
-	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Congratulation. You finished the testing phase." x=0 y=0 z_index=0
 
 define feedback new_feedback_h
 	set reset_variables yes
@@ -1340,7 +1335,7 @@ define inline_script slimstampen_setup_b
 	
 	            # Update decay estimates of previous encounters
 	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
-	        print(str(fact.answer) + ": "+ str(alpha))
+	        #print(str(fact.answer) + ": "+ str(alpha))
 	        return(self.calculate_activation_from_encounters(encounters, time))
 	
 	
@@ -1639,7 +1634,7 @@ define inline_script slimstampen_setup_c
 	
 	            # Update decay estimates of previous encounters
 	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
-	        print(str(fact.answer) + ": "+ str(alpha))
+	        #print(str(fact.answer) + ": "+ str(alpha))
 	        return(self.calculate_activation_from_encounters(encounters, time))
 	
 	
@@ -1938,7 +1933,7 @@ define inline_script slimstampen_setup_h
 	
 	            # Update decay estimates of previous encounters
 	            encounters = [encounter._replace(decay = self.calculate_decay(encounter.activation, alpha)) for encounter in encounters]
-	        print(str(fact.answer) + ": "+ str(alpha))
+	        #print(str(fact.answer) + ": "+ str(alpha))
 	        return(self.calculate_activation_from_encounters(encounters, time))
 	
 	
@@ -2100,7 +2095,6 @@ define sequence test_b
 	run variables_b always
 	run word_loop_b always
 	run test_feedback_b always
-	run new_feedback_b always
 
 define sequence test_c
 	set flush_keyboard yes
