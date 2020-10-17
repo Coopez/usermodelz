@@ -1,7 +1,7 @@
 ---
 API: 2.1
-OpenSesame: 3.3.3
-Platform: posix
+OpenSesame: 3.3.5
+Platform: nt
 ---
 set width 1024
 set uniform_coordinates yes
@@ -26,7 +26,7 @@ set font_size 20
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "/Users/annikaschnabel/Documents/UserModels"
+set experiment_path "C:/Users/Niklas/Documents/Projects/UM/rep/usermodelz"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -1033,7 +1033,7 @@ define inline_script present_trial_h
 	        hint = 0 #to make sure no extra letter is added after typing a letter and before the hint is removed from the screen
 	
 	# Give hints if time limit is over
-	    if keyboard_response == "" and not new:
+	    if keyboard_response == "" and not new and not key== "backspace":
 	        hint = 1
 	        if cnt-1 < len(answer)/2:
 	            cnt += 1
@@ -2664,6 +2664,7 @@ define inline_script variables_h
 	set _prepare ""
 
 define loop while_there_is_time_left_b
+	set source_file ""
 	set source table
 	set repeat 1000
 	set order random
@@ -2676,6 +2677,7 @@ define loop while_there_is_time_left_b
 	run trial_sequence_b
 
 define loop while_there_is_time_left_c
+	set source_file ""
 	set source table
 	set repeat 1000
 	set order random
@@ -2688,6 +2690,7 @@ define loop while_there_is_time_left_c
 	run trial_sequence_c
 
 define loop while_there_is_time_left_h
+	set source_file ""
 	set source table
 	set repeat 1000
 	set order random
