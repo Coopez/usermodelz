@@ -1,7 +1,7 @@
 ---
 API: 2.1
-OpenSesame: 3.3.5
-Platform: nt
+OpenSesame: 3.3.4a13
+Platform: posix
 ---
 set width 1024
 set uniform_coordinates yes
@@ -26,7 +26,7 @@ set font_size 20
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "C:/Users/Niklas/Documents/Projects/UM/rep/usermodelz"
+set experiment_path "/Users/annikaschnabel/Downloads/usermodelz-master"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -381,6 +381,7 @@ define sequence experiment
 	set flush_keyboard yes
 	set description "Runs a number of items in sequence"
 	run MixedDesign always
+	run distraction_task always
 	run hello always
 	run experiment_loop_odd "[counterBalancing] = control"
 	run experiment_loop_even "[counterBalancing] = experiment"
@@ -2126,7 +2127,7 @@ define inline_script test_feedback_b
 	  
 	# Converting lists of tuples into  
 	# pandas Dataframe.  
-	df_test = pd.DataFrame(list_of_tuples, columns = ['english', 'translation', 'response', 'correct', 'rt'])
+	df_test = pd.DataFrame(list_of_tuples, columns = ['english_b', 'translation_b', 'response_b', 'correct_b', 'rt_b'])
 	     
 	# Print data.  
 	df_test 
@@ -2179,7 +2180,7 @@ define inline_script test_feedback_c
 	  
 	# Converting lists of tuples into  
 	# pandas Dataframe.  
-	df_test = pd.DataFrame(list_of_tuples, columns = ['english', 'translation','correct','response', 'rt'])
+	df_test = pd.DataFrame(list_of_tuples, columns = ['english_c', 'translation_c','correct_c','response_c', 'rt_c'])
 	     
 	# Print data.  
 	df_test 
@@ -2226,7 +2227,7 @@ define inline_script test_feedback_h
 	  
 	# Converting lists of tuples into  
 	# pandas Dataframe.  
-	df_test = pd.DataFrame(list_of_tuples, columns = ['english', 'translation', 'response', 'correct', 'rt'])
+	df_test = pd.DataFrame(list_of_tuples, columns = ['english_h', 'translation_h', 'response_h', 'correct_h', 'rt_h'])
 	     
 	# Print data.  
 	df_test 
@@ -2664,7 +2665,6 @@ define inline_script variables_h
 	set _prepare ""
 
 define loop while_there_is_time_left_b
-	set source_file ""
 	set source table
 	set repeat 1000
 	set order random
@@ -2677,7 +2677,6 @@ define loop while_there_is_time_left_b
 	run trial_sequence_b
 
 define loop while_there_is_time_left_c
-	set source_file ""
 	set source table
 	set repeat 1000
 	set order random
@@ -2690,7 +2689,6 @@ define loop while_there_is_time_left_c
 	run trial_sequence_c
 
 define loop while_there_is_time_left_h
-	set source_file ""
 	set source table
 	set repeat 1000
 	set order random
