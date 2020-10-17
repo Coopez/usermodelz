@@ -509,7 +509,7 @@ define form_text_display goodbye
 	set margins "50;50;50;50"
 	set form_title "Finished!"
 	__form_text__
-	The experiment is finished! Thank you for your participation.
+	This part of the experiment is finished. Press enter than ready to continue
 	__end__
 	set description "A simple text display form"
 	set cols "1;1;1"
