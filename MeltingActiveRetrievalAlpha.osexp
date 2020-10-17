@@ -41,10 +41,15 @@ define sketchpad Break
 	set description "Präsentiert Stimuli"
 	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Congratulation! You finished the first part of the experiment. Once you are ready spress enter to start the second part of the experiment" x=0 y=0 z_index=0
 
-define sketchpad Debriefing
+define sketchpad Debriefing_b
 	set duration keypress
 	set description "Präsentiert Stimuli"
-	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Thank you for participating in our experiment. Please send the output file to us." x=0 y=0 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Debriefing:<br /><br />We were interested to modify the original SlimStampen learning algorithm. You performed one learning session employing the original system. The system computes the optimal spacing of items based on your answer's latency and correctness, thereby constructing an effective learning schedule for you. In the other learning session the same system was running in the background. However despite your responses' latency and correctness the system also considered your evaluations of items' difficulty when deciding when to present which item to you. We will examine in which learning session you learned more. <br /><br />Thank you for participating in our experiment. Please send us the log file (example: subject-nr.csv) to us .through a.j.schnabel@student.rug.nl (you can find this email address also in our ReadMe)." x=0 y=0 z_index=0
+
+define sketchpad Debriefing_h
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Debriefing:<br /><br />We were interested to modify the original SlimStampen learning algorithm. You performed one learning session employing the original system. The system computes the optimal spacing of items based on your answer's latency and correctness, thereby constructing an effective learning schedule for you. In the other learning session the same system was running in the background. However we increased the amount of words that you encountered and when you could not recall an item we did not simply show you the correct answer again but rather progressively revealed the answer to you. This we hypothesized would promote active retrieval of the item which is found to have a better learning effect than simply rereading the correct association. We will examine in which learning session you learned more. <br /><br />Thank you for participating in our experiment. Please send us the log file (example: subject-nr.csv) to us .through a.j.schnabel@student.rug.nl (you can find this email address also in our ReadMe)." x=0 y=0 z_index=0
 
 define inline_script MixedDesign
 	set description "Führt Python Code aus"
@@ -229,6 +234,12 @@ define sequence control
 	run while_there_is_time_left_c always
 	run save_data_c always
 
+define sequence debriefing_sequence
+	set flush_keyboard yes
+	set description "Führt mehrere Items nacheinander aus"
+	run Debriefing_h "[experiment] = hint"
+	run Debriefing_b "[experiment] = button"
+
 define sequence distraction_task
 	set flush_keyboard yes
 	set description "Führt mehrere Items nacheinander aus"
@@ -384,7 +395,6 @@ define sequence experiment
 	run hello always
 	run experiment_loop_odd "[counterBalancing] = control"
 	run experiment_loop_even "[counterBalancing] = experiment"
-	run Debriefing always
 
 define sequence experiment_loop_even
 	set flush_keyboard yes
@@ -398,6 +408,7 @@ define sequence experiment_loop_even
 	run control always
 	run distraction_task always
 	run test_c always
+	run debriefing_sequence always
 
 define sequence experiment_loop_odd
 	set flush_keyboard yes
@@ -505,7 +516,7 @@ define form_text_display goodbye
 	set spacing 10
 	set rows "1;4;1"
 	set only_render no
-	set ok_text Quit
+	set ok_text Continue
 	set margins "50;50;50;50"
 	set form_title "Finished!"
 	__form_text__
@@ -522,7 +533,7 @@ define form_text_display goodbye
 define sketchpad hello
 	set duration keypress
 	set description "Präsentiert Stimuli"
-	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Welcome to the experiment. In the following you will have 2 learning sessions. The experiment should take around 45 minutes." x=0 y=0 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Welcome to the experiment. In the following you will have 2 learning sessions. The experiment should take around 35 minutes." x=0 y=0 z_index=0
 
 define inline_script imports
 	set description "Executes Python code"
@@ -843,9 +854,9 @@ define inline_script present_trial_b
 	            cnt += 1
 	            if mouse_x > x1 and mouse_x < x2 and mouse_y > y1 and mouse_y < y2:
 	                if cnt == 1: #participant pressed on easy
-	                    alpha = 0.2
+	                    alpha = 0.1
 	                elif cnt == 2:#participant pressed on hard
-	                    alpha = 0.4
+	                    alpha = 0.5
 	
 	            # draw boxes  
 	    last_prompt = 0
@@ -1148,7 +1159,7 @@ define inline_script save_data_h
 define sketchpad scoring_b
 	set duration keypress
 	set description "Präsentiert Stimuli"
-	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="When you indicate that an item is easy or difficult you will then encounter it less or more often afterwards. You will only be asked to rate the item the first time you encounter it. If you think that the item is neither particularly easy nor particularly difficult you can continue by clicking anywhere but on the buttons.<br /><br />Press enter to start the learning session" x=0 y=0 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="In this trial, when encountering an item for the first time you may indicate if you find an item particularly easy or difficult by clicking the according button. Consequently, you will encounter the item less or more often respectively. If you think that the item is neither particularly easy nor particularly difficult you can skip the evaluation process by clicking anywhere on the screen but the  buttons.<br /><br />Press enter to start the learning session" x=0 y=0 z_index=0
 
 define sketchpad scoring_h
 	set duration keypress
@@ -2749,7 +2760,7 @@ define loop word_loop_c
 	set repeat 1
 	set order sequential
 	set description "Führt wiederholt ein anderes Item aus"
-	set cycles 17
+	set cycles 16
 	set continuous no
 	set break_if_on_first yes
 	set break_if never
@@ -2785,8 +2796,6 @@ define loop word_loop_c
 	setcycle 14 esperanto leterportisto
 	setcycle 15 english nurse
 	setcycle 15 esperanto flegistino
-	setcycle 16 english ""
-	setcycle 16 esperanto ""
 	run test_sequence_c
 
 define loop word_loop_h
