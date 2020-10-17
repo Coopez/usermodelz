@@ -30,4 +30,4 @@ start OpenSesame by running:
 
 In the UI of opensesame open the experiment file "MeltingActiveRetrievalAlpha.osexp" that you have downloaded from this repository.
 In the initial prompts please indicate the participant number that we allocated to you (Person number on the Sign-up sheet) 
-and also indicate the location to which the log file can be saved. Please send us this log file after the experiment. Please send it to a.j.schnabel@student.rug.nl and put in the email subject results MeltingActiveRetrieval.
+and also indicate the location to which the log file can be saved. Run the experiment in full screen. Please send us this log file after the experiment. Please send it to a.j.schnabel@student.rug.nl and put in the email subject results MeltingActiveRetrieval.
